@@ -34,8 +34,9 @@ def parser(tokens):
             if parserId(tokens):
                 tokens.pop(0)
                 if tokens[0] == ';':
-                    tokens.pop(0)
-                    print('CREATE DATABASE <id> ;')
+                    # É necessário verificar se ainda tem comandos seguintes depois de reconhecer um comando, se sim, chama parser() recursivamente
+                    tokens.pop(0) # pop() deve ser feito apenas se ainda tiver comandos
+                    print('CREATE DATABASE <id> ;') # pode ser retornado true se tiver acabado os tokens
                     # parser()
         if tokens[0] == 'TABLE':
             tokens.pop(0)
@@ -47,22 +48,31 @@ def parser(tokens):
                         tokens.pop(0)
                         if parserType(tokens):
                             tokens.pop(0)
-                            tokens = declaration(tokens)
+                            tokens = someIdType(tokens)
                             if tokens[0] == ')':
                                 tokens.pop(0)
                                 if tokens[0] == ';':
+                                    tokens.pop(0)
                                     print('CREATE TABLE')
+    if tokens[0] == 'USE':
+        tokens.pop(0)
+        if parserId(tokens):
+            tokens.pop(0)
+            if tokens[0] == ';':
+                tokens.pop(0)
+                print('USE ID')
+                
 
 # tokens = ['CREATE', 'TABLE', 'Persons', '(', 'PersonID', 'int', ',', 'LastName', 'bit', ')', ';']   
 
-def declaration(tokens):
+def someIdType(tokens):
     if tokens[0] == ',':
         tokens.pop(0)
         if parserId(tokens):
             tokens.pop(0)
             if parserType(tokens):
                 tokens.pop(0)
-                tokens = declaration(tokens)
+                tokens = someIdType(tokens)
     return tokens
 
 # id (id tipo D)
