@@ -8,100 +8,159 @@ def parserValue(tokens):
     return True
 
 def parser(tokens):
-    if tokens[0] == 'CREATE':
-        tokens.pop(0)
-        if tokens[0] == 'DATABASE':
+    if len(tokens) == 0:
+        return True
+    
+    try:
+        if tokens[0] == 'CREATE':
+            tokens.pop(0)
+            if tokens[0] == 'DATABASE':
+                tokens.pop(0)
+                if parserId(tokens):
+                    tokens.pop(0)
+                    if tokens[0] == ';':
+                        # É necessário verificar se ainda tem comandos seguintes depois de reconhecer um comando, se sim, chama parser() recursivamente
+                        tokens.pop(0) # pop() deve ser feito apenas se ainda tiver comandos
+                        print('CREATE DATABASE')
+                        
+                        if parser(tokens):
+                            tokens = parser(tokens)
+                        else:
+                            return False
+                        
+            elif tokens[0] == 'TABLE':
+                tokens.pop(0)
+                if parserId(tokens):
+                    tokens.pop(0)
+                    if tokens[0] == '(':
+                        tokens.pop(0)
+                        if parserId(tokens):
+                            tokens.pop(0)
+                            if parserType(tokens):
+                                tokens.pop(0)
+                                tokens = moreThanOneIdType(tokens)
+                                if tokens[0] == ')':
+                                    tokens.pop(0)
+                                    if tokens[0] == ';':
+                                        tokens.pop(0)
+                                        print('CREATE TABLE')
+                                        tokens = parser(tokens)
+        elif tokens[0] == 'USE':
             tokens.pop(0)
             if parserId(tokens):
                 tokens.pop(0)
                 if tokens[0] == ';':
-                    # É necessário verificar se ainda tem comandos seguintes depois de reconhecer um comando, se sim, chama parser() recursivamente
-                    tokens.pop(0) # pop() deve ser feito apenas se ainda tiver comandos
-                    print('CREATE DATABASE')
-                    
-                    if parser(tokens):
-                        tokens = parser(tokens)
-                    else:
-                        return False
-                     
-        elif tokens[0] == 'TABLE':
-            tokens.pop(0)
-            if parserId(tokens):
-                tokens.pop(0)
-                if tokens[0] == '(':
                     tokens.pop(0)
-                    if parserId(tokens):
+                    print('USE ID')
+                    tokens = parser(tokens)
+                    
+        elif tokens[0] == 'INSERT':
+            tokens.pop(0)
+            if tokens[0] == 'INTO':
+                tokens.pop(0)
+                if parserId(tokens):
+                    tokens.pop(0)
+                    if tokens[0] == '(':
                         tokens.pop(0)
-                        if parserType(tokens):
+                        if parserId(tokens):
                             tokens.pop(0)
-                            tokens = moreThanOneIdType(tokens)
+                            tokens = moreThanOneId(tokens)
                             if tokens[0] == ')':
                                 tokens.pop(0)
-                                if tokens[0] == ';':
+                                if tokens[0] == 'VALUES':
                                     tokens.pop(0)
-                                    print('CREATE TABLE')
-                                    tokens = parser(tokens)
-    elif tokens[0] == 'USE':
-        tokens.pop(0)
-        if parserId(tokens):
+                                    if tokens[0] == '(':
+                                        tokens.pop(0)
+                                        if parserValue(tokens):
+                                            tokens.pop(0)
+                                            tokens = moreThanOneValue(tokens)
+                                            if tokens[0] == ')':
+                                                tokens.pop(0)
+                                                tokens = moreThanOneRegister(tokens)
+                                                if tokens[0] == ';':
+                                                    tokens.pop(0)
+                                                    print('INSERT INTO')
+                                                    tokens = parser(tokens)
+        elif tokens[0] == 'SELECT':
             tokens.pop(0)
-            if tokens[0] == ';':
+            if tokens[0] == '*':
                 tokens.pop(0)
-                print('USE ID')
-                tokens = parser(tokens)
-                
-    elif tokens[0] == 'INSERT':
-        tokens.pop(0)
-        if tokens[0] == 'INTO':
-            tokens.pop(0)
-            if parserId(tokens):
-                tokens.pop(0)
-                if tokens[0] == '(':
+                if tokens[0] == 'FROM':
                     tokens.pop(0)
                     if parserId(tokens):
                         tokens.pop(0)
-                        tokens = moreThanOneId(tokens)
-                        if tokens[0] == ')':
+                        if tokens[0] == ';':
                             tokens.pop(0)
-                            if tokens[0] == 'VALUES':
+                            print('SELECT * FROM ID')
+                            tokens = parser(tokens)
+                            
+                        elif tokens[0] == 'ORDER':
+                            tokens.pop(0)
+                            if tokens[0] == 'BY':
                                 tokens.pop(0)
-                                if tokens[0] == '(':
+                                if parserId(tokens):
+                                    tokens.pop(0)
+                                    if tokens[0] == ';':
+                                        tokens.pop(0)
+                                        print('SELECT * FROM ID ORDER BY ID;')
+                                        tokens = parser(tokens)
+                                        
+                        elif tokens[0] == 'WHERE':
+                            tokens.pop(0)
+                            if parserId(tokens):
+                                tokens.pop(0)
+                                if tokens[0] == '=':
                                     tokens.pop(0)
                                     if parserValue(tokens):
                                         tokens.pop(0)
-                                        tokens = moreThanOneValue(tokens)
-                                        if tokens[0] == ')':
+                                        if tokens[0] == ';':
                                             tokens.pop(0)
-                                            tokens = moreThanOneRegister(tokens)
-                                            if tokens[0] == ';':
+                                            print('SELECT * FROM ID WHERE ID = VALOR;')
+                                            tokens = parser(tokens)
+                                            
+            elif parserId(tokens):
+                tokens.pop(0)
+                tokens = moreThanOneId(tokens)
+                if tokens[0] == 'FROM':
+                    tokens.pop(0)
+                    if parserId(tokens):
+                        tokens.pop(0)
+                        if tokens[0] == ';':
+                            tokens.pop(0)
+                            print('SELECT ID FROM ID')
+                            tokens = parser(tokens)
+                            
+        elif tokens[0] == 'UPDATE':
+            tokens.pop(0)
+            if parserId(tokens):    
+                tokens.pop(0)
+                if tokens[0] == 'SET':
+                    tokens.pop(0)
+                    if parserId(tokens):
+                        tokens.pop(0)
+                        if tokens[0] == '=':
+                            tokens.pop(0)
+                            if parserValue(tokens):
+                                tokens.pop(0)
+                                if tokens[0] == 'WHERE':
+                                    tokens.pop(0)
+                                    if parserId(tokens):
+                                        tokens.pop(0)
+                                        if tokens[0] == '=':
+                                            tokens.pop(0)
+                                            if parserValue(tokens):
                                                 tokens.pop(0)
-                                                print('INSERT INTO')
-                                                tokens = parser(tokens)
-    elif tokens[0] == 'SELECT':
-        tokens.pop(0)
-        if tokens[0] == '*':
+                                                if tokens[0] == ';':
+                                                    tokens.pop(0)
+                                                    print('UPDATE')
+                                                    tokens = parser(tokens)
+        elif tokens[0] == 'DELETE':
             tokens.pop(0)
             if tokens[0] == 'FROM':
                 tokens.pop(0)
                 if parserId(tokens):
                     tokens.pop(0)
-                    if tokens[0] == ';':
-                        tokens.pop(0)
-                        print('SELECT * FROM ID')
-                        tokens = parser(tokens)
-                        
-                    elif tokens[0] == 'ORDER':
-                        tokens.pop(0)
-                        if tokens[0] == 'BY':
-                            tokens.pop(0)
-                            if parserId(tokens):
-                                tokens.pop(0)
-                                if tokens[0] == ';':
-                                    tokens.pop(0)
-                                    print('SELECT * FROM ID ORDER BY ID;')
-                                    tokens = parser(tokens)
-                                    
-                    elif tokens[0] == 'WHERE':
+                    if tokens[0] == 'WHERE':
                         tokens.pop(0)
                         if parserId(tokens):
                             tokens.pop(0)
@@ -111,76 +170,24 @@ def parser(tokens):
                                     tokens.pop(0)
                                     if tokens[0] == ';':
                                         tokens.pop(0)
-                                        print('SELECT * FROM ID WHERE ID = VALOR;')
-                                        tokens = parser(tokens)
-                                        
-        elif parserId(tokens):
+                                        print('DELETE')
+                                        tokens = parser(tokens)          
+
+        elif tokens[0] == 'TRUNCATE':
             tokens.pop(0)
-            tokens = moreThanOneId(tokens)
-            if tokens[0] == 'FROM':
+            if tokens[0] == 'TABLE':
                 tokens.pop(0)
                 if parserId(tokens):
                     tokens.pop(0)
                     if tokens[0] == ';':
                         tokens.pop(0)
-                        print('SELECT ID FROM ID')
-                        tokens = parser(tokens)
-                        
-    elif tokens[0] == 'UPDATE':
-        tokens.pop(0)
-        if parserId(tokens):    
-            tokens.pop(0)
-            if tokens[0] == 'SET':
-                tokens.pop(0)
-                if parserId(tokens):
-                    tokens.pop(0)
-                    if tokens[0] == '=':
-                        tokens.pop(0)
-                        if parserValue(tokens):
-                            tokens.pop(0)
-                            if tokens[0] == 'WHERE':
-                                tokens.pop(0)
-                                if parserId(tokens):
-                                     tokens.pop(0)
-                                     if tokens[0] == '=':
-                                        tokens.pop(0)
-                                        if parserValue(tokens):
-                                            tokens.pop(0)
-                                            if tokens[0] == ';':
-                                                tokens.pop(0)
-                                                print('UPDATE')
-                                                tokens = parser(tokens)
-    elif tokens[0] == 'DELETE':
-        tokens.pop(0)
-        if tokens[0] == 'FROM':
-            tokens.pop(0)
-            if parserId(tokens):
-                tokens.pop(0)
-                if tokens[0] == 'WHERE':
-                    tokens.pop(0)
-                    if parserId(tokens):
-                        tokens.pop(0)
-                        if tokens[0] == '=':
-                            tokens.pop(0)
-                            if parserValue(tokens):
-                                tokens.pop(0)
-                                if tokens[0] == ';':
-                                    tokens.pop(0)
-                                    print('DELETE')
-                                    tokens = parser(tokens)          
+                        print('TRUNCATE TABLE')
+                        tokens = parser(tokens)                    
 
-    elif tokens[0] == 'TRUNCATE':
-        tokens.pop(0)
-        if tokens[0] == 'TABLE':
-            tokens.pop(0)
-            if parserId(tokens):
-                tokens.pop(0)
-                if tokens[0] == ';':
-                    tokens.pop(0)
-                    print('TRUNCATE TABLE')
-                    tokens = parser(tokens)                    
-    
-    return tokens
+        return tokens 
+        
+    except:
+        return False
             
 # tem que botaros else e disparar excessao
 # falta colocar o try except                            
@@ -315,13 +322,16 @@ def main():
     # parser(tokens)
 
     # Teste 1: comando válido
-    tokens = ['DELETE', 'FROM', 'produtos', 'WHERE', 'id', '=', '2', ';']
-    parser(tokens)
+    # tokens = ['DELETE', 'FROM', 'produtos', 'WHERE', 'id', '=', '2', ';']
+    # parser(tokens)
 
     # Teste 1: comando válido
     # tokens = ['TRUNCATE', 'TABLE', 'produtos', ';']
     # parser(tokens)
-
+    
+    # Teste
+    tokens = ['TRUNCATE', 'TABLE', 'produtos', ';', 'DELETE', 'FROM', 'produtos', 'WHERE', 'id', '=', '2', ';', 'SELECT', 'id', ',', 'descricao', ',', 'preco', 'FROM', 'produtos', ';']
+    parser(tokens)
     
 if __name__ == "__main__":
     main()
